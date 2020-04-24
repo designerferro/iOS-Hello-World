@@ -1,0 +1,34 @@
+version: 2.1
+jobs:
+  build-and-test:
+  swiftlint:
+    docker:
+      - image: dantoml/swiftlint:latest
+    steps:
+      - checkout
+      - run: swiftlint lint --reporter junit | tee result.xml
+      - store_artifacts:
+          path: result.xml
+      - store_test_results:
+          path: result.xml
+  danger:
+    docker:
+      - image: dantoml/danger:latest
+    steps:
+      - checkout
+      - run: danger
+      - sonarcloud/scan
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+
+workflows:
+  build-test-lint:
+    jobs:
+      - swiftlint
+      - danger
+      - build-and-test
+  main:
+    jobs:
+      - build:
+          context: SonarCloud
